@@ -37,7 +37,8 @@ jobs:
 
       - name: Add 1000 to the docker group
         run: |
-          sudo usermod -aG docker 1000
+          username=$(getent passwd 1000 | cut -d: -f1)
+          sudo usermod -aG docker $username
 
       - name: Modify $GITHUB_OUTPUT to allow group write
         run: |
