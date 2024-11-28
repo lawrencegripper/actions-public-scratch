@@ -33,5 +33,5 @@ jobs:
       - name: Run a multi-line script
         run: |
           ls -al /home/runner/work/_temp/_runner_file_commands
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          getent passwd
+          getent group
