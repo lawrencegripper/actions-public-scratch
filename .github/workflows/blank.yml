@@ -29,10 +29,15 @@ jobs:
       - name: Run a one-line script
         run: echo $GITHUB_OUTPUT
 
+      - name: Create a user 1000
+        run: |
+          sudo useradd -u 1000 -m 1000
+
       - name: Try and write as 1000
         continue-on-error: true
         run: |
-          sudo su 1000 -c "echo $GITHUB_OUTPUT > /home/runner/work/_temp/_runner_file_commands/echo.txt"
+          username=$(getent passwd 1000 | cut -d: -f1)
+          sudo su $username -c "echo $GITHUB_OUTPUT > /home/runner/work/_temp/_runner_file_commands/echo.txt"
 
       - name: Add 1000 to the docker group
         run: |
