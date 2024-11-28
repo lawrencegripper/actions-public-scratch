@@ -29,8 +29,26 @@ jobs:
       - name: Run a one-line script
         run: echo $GITHUB_OUTPUT
 
+      - name: Try and write as 1000
+        continue-on-error: true
+        run: |
+          sudo su 1000 -c "echo $GITHUB_OUTPUT > /home/runner/work/_temp/_runner_file_commands/echo.txt"
+
+      - name: Add 1000 to the docker group
+        run: |
+          sudo usermod -aG docker 1000
+
+      - name: Modify $GITHUB_OUTPUT to allow group write
+        run: |
+          sudo chmod g+w $GITHUB_OUTPUT
+
+      - name: Succeed to write as 1000
+        continue-on-error: true
+        run: |
+          sudo su 1000 -c "echo $GITHUB_OUTPUT > /home/runner/work/_temp/_runner_file_commands/echo.txt"
+
       # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Group info
         run: |
           ls -al /home/runner/work/_temp/_runner_file_commands
           echo "users"
