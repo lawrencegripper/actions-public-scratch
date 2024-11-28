@@ -33,5 +33,9 @@ jobs:
       - name: Run a multi-line script
         run: |
           ls -al /home/runner/work/_temp/_runner_file_commands
+          echo "users"
           getent passwd
+          echo "groups"
           getent group
+          echo "users in docker groups"
+          getent group docker
