@@ -33,7 +33,8 @@ jobs:
         continue-on-error: true
         run: |
           username=$(getent passwd 1000 | cut -d: -f1)
-          sudo su $username -c "echo $GITHUB_OUTPUT > /home/runner/work/_temp/_runner_file_commands/echo.txt"
+
+          sudo su $username -c "echo 'key=value' > $GITHUB_OUTPUT"
 
       - name: Add 1000 to the docker group
         run: |
@@ -47,7 +48,8 @@ jobs:
       - name: Succeed to write as 1000
         continue-on-error: true
         run: |
-          sudo su 1000 -c "echo $GITHUB_OUTPUT > /home/runner/work/_temp/_runner_file_commands/echo.txt"
+          username=$(getent passwd 1000 | cut -d: -f1)
+          sudo su $username -c "echo 'key=value' > $GITHUB_OUTPUT"
 
       # Runs a set of commands using the runners shell
       - name: Group info
