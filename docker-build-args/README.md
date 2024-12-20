@@ -62,10 +62,12 @@ Can `docker run`:
 
 [Adds](https://github.com/lawrencegripper/actions-public-scratch/blob/ad79417943183c87e0efa72f8d6c2ea3da3950d8/.github/workflows/docker-build-args.yml#L112) `--user "$(id -u):$(id -g)"` to the `docker run` command.
 
-Same as 👆, because the `docker build` create as maps the user the `docker run --user` arg is 
-redundant. The user is already configured to match current UID `1001`.
+Identical to the previous example `Build with user mapping, run as container user` because the `docker build` create and maps the user which the container will start with. As such `docker run` user is already configured to match current user `1001`. The `--user` arg is redundant.
 
 ### Job: Build without user mapping (UID=1000), run with user mapping
+
+This doesn't configure the user during `docker build` to match `1001` then uses `docker run --user` to 
+configure the user when running a command.
 
 **Will pass?** ❌
 
@@ -80,6 +82,8 @@ The `docker run` has `UID=1001`. As the UID was not mapped during build the `/ap
 It can still write to `$GITHUB_OUTPUT` because this file is writable by `UID=1001`.
 
 ### Job: `Build without mapping, run with without mapping`
+
+This doesn't set the user to match during build or `docker run`.
 
 **Will pass?** ❌
 
@@ -98,6 +102,9 @@ Writing to $GITHUB_OUTPUT fails for the same reason.
 
 ### Job: `Build without mapping, run without user mapping, use sudo to write to GITHUB_OUTPUT`
 
+This doesn't configure the user during `docker build` or `docker run` but instead uses `sudo` 
+to escalate privileges of the user in the container.
+
 **Will pass?** ✅
 
 Can `docker run`:
@@ -111,6 +118,8 @@ The container has `sudo` installed. When using `docker run` we use `sudo` to mak
 the command `root` `UID=0` giving it access to all files.
 
 ### Job: `No user mapping, build and run as root user`
+
+This leaves the default `root` user of `debian` at build and run.
 
 **Will pass?** ✅
 
