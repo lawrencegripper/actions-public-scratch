@@ -2,6 +2,6 @@ FROM debian
 
 RUN mkdir /app
 WORKDIR /app
-COPY --chmod=660 ./docker-build-args/660-user-owned-copied-into-docker-image.txt .
+COPY --chmod=660 --chown=exampleusername:examplegroupname ./docker-build-args/660-user-owned-copied-into-docker-image.txt .
 
 CMD ["/bin/bash"]
