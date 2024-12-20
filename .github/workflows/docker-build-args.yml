@@ -29,13 +29,13 @@ env:
     ls -al /home/runner/work/_temp/_runner_file_commands/
   WRITE_PERMISSION_CHECK_CMD: |
     set -e
-    echo '!cat the file added to the docker image:'
+    echo '!Read the file added to the docker image: /app/660-user-owned-copied-into-docker-image.txt'
     cat /app/660-user-owned-copied-into-docker-image.txt
-    echo '!can I write to this file added to docker image as current user?'
+    echo '!Write to this file added to docker image as current user?'
     echo 'test' > /app/660-user-owned-copied-into-docker-image.txt
-    echo '!cat the file mounted into the docker image'
+    echo '!Read the file mounted into the docker image: /docker-build-args/file-mounted-from-host.txt'
     cat /docker-build-args/file-mounted-from-host.txt
-    echo '!can I write to this file mounted into the docker image as current user?'
+    echo '!Write to this file mounted into the docker image as current user?'
     echo 'test' > /docker-build-args/file-mounted-from-host.txt
   OUTPUT_PERMISSION_CHECK_CMD: |
     set -e
@@ -178,8 +178,8 @@ jobs:
             test-docker-image-without-user-mapping \
             /bin/bash -c "${{ env.OUTPUT_PERMISSION_CHECK_CMD }}"
 
-  build-as-1000-run-without-mapping:
-    name: Build as 1000, run with user mapping
+  build-as-without-mapping-run-without-mapping:
+    name: Build as without mapping, run with without mapping
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -218,51 +218,8 @@ jobs:
             test-docker-image-without-user-mapping \
             /bin/bash -c "${{ env.OUTPUT_PERMISSION_CHECK_CMD }}"
 
-  build-as-1000-run-with-user-mapping:
-    name: Build as 1000, run with user mapping
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Build Docker image
-        run: |
-          docker build \
-            -t test-docker-image-without-user-mapping \
-            -f ./docker-build-args/Dockerfile.with-user-mapping .
-
-      - name: Run Docker container
-        if: always()
-        run: |
-          docker run \
-            --user $(id -u):$(id -g) \
-            -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
-            -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
-            test-docker-image-without-user-mapping \
-            /bin/bash -c "${{ env.USER_PERMISSIONS_OUTPUT_CMD }}"
-
-      - name: Run WRITE_PERMISSION_CHECK_CMD
-        if: always()
-        run: |
-          docker run \
-            --user $(id -u):$(id -g) \
-            -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
-            -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
-            test-docker-image-without-user-mapping \
-            /bin/bash -c "${{ env.WRITE_PERMISSION_CHECK_CMD }}"
-
-      - name: Run OUTPUT_PERMISSION_CHECK_CMD
-        if: always()
-        run: |
-          docker run \
-            --user $(id -u):$(id -g) \
-            -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
-            -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
-            test-docker-image-without-user-mapping \
-            /bin/bash -c "${{ env.OUTPUT_PERMISSION_CHECK_CMD }}"
-
-  build-as-1000-run-with-user-mapping-with-sudo:
-    name: Build as 1000, run with user mapping, use sudo to write to GITHUB_OUTPUT
+  build-without-mapping-run-without-user-mapping-with-sudo:
+    name: Build without mapping, run without user mapping, use sudo to write to GITHUB_OUTPUT
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
