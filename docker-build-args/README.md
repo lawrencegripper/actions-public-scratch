@@ -7,11 +7,25 @@ It highlights how issues can occur when:
 2. `COPY --chmod=660` is used during build with UID=1000 and then `--user` is used during run with UID=1001
 3. `docker run --user` is used by the `docker build` was run with a different user
 
-## Dockerfiles
+## Files
 
-- `Dockerfile.with-user-mapping`: Builds a Docker image with user and group IDs passed as build arguments.
-- `Dockerfile.without-user-mapping`: Builds a Docker image without user and group ID mapping.
-- `Dockerfile.with-sudo`: Builds a Docker image with sudo installed to allow running commands with elevated privileges.
+- [./.github/docker-build-args.yml](../.github/workflows/docker-build-args.yml)
+- Docker files in [.docker-build-args](./)
+    - `Dockerfile.with-user-mapping`: Builds a Docker image with user and group IDs passed as build arguments.
+    - `Dockerfile.without-user-mapping`: Builds a Docker image without user and group ID mapping.
+    - `Dockerfile.with-sudo`: Builds a Docker image with sudo installed to allow running commands with elevated privileges.
+
+The workflow demonstrates different approaches to mapping users between the host and the container.
+
+It demonstrates how these work or fail in different configurations, both with files mounted and files copied in at build time.
+
+### File mounted into the container at run time
+
+There are two of these 
+1. [file-mounted-from-host.txt](./file-mounted-from-host.txt) which is mounted like so `-v ${{ github.workspace }}/docker-build-args:/docker-build-args` 
+2. `$GITHUB_OUTPUT` which is mounted like so `-v $GITHUB_OUTPUT:$GITHUB_OUTPUT` and used to set stage outputs
+
+### File copied into the container a build time
 
 In the docker file we run:
 
@@ -19,13 +33,15 @@ In the docker file we run:
 COPY --chmod=660 --chown exampleusername:examplegroupname ./docker-build-args/660-user-owned-copied-into-docker-image.txt .
 ```
 
-This simulates creating a file which is owned and readable only by the docker files current `USER`. 
+This simulates creating a file which is owned and readable only by the docker files current `USER`.
 
 In a real example these could be created by doing `RUN npm install` which pulls and places files in the image.
 
-## GitHub Actions Workflow
+## GitHub Actions Workflow Examples and Outcomes
 
-The workflow file `.github/workflows/docker-build-args.yml` defines several jobs to build and run Docker images with different user permissions:
+The workflow file `.github/workflows/docker-build-args.yml` defines several jobs to build and run Docker images with different user permissions and we can see the outcomes.
+
+- [Resulting workflow](https://github.com/lawrencegripper/actions-public-scratch/actions/runs/12430924833/job/34707316182)
 
 ### Job: `Build with user mapping, run as container user`
 
@@ -57,23 +73,52 @@ Can `docker run`:
  - write to file placed in built image `/app/660-user-owned-copied-into-docker-image.txt` ❌ [Example](https://github.com/lawrencegripper/actions-public-scratch/actions/runs/12430732525/job/34706736062#step:5:48)
  - write to $GITHUB_OUTPUT ✅
 
-Why?
+#### Why?
 
 The `docker run` has `UID=1001`. As the UID was not mapped during build the `/app/660-user-owned-copied-into-docker-image.txt` file is only writable to `UID=1000`.
 
 It can still write to `$GITHUB_OUTPUT` because this file is writable by `UID=1001`.
 
-## Job: `Build as without mapping, run with without mapping`
+### Job: `Build without mapping, run with without mapping`
 
-## Job: ``
+**Will pass?** ❌
 
+Can `docker run`:
+ - write to file placed in built image `/app/660-user-owned-copied-into-docker-image.txt` ✅
+ - write to file mounted from build folder `/docker-build-args/file-mounted-from-host.txt` ❌ [Example](https://github.com/lawrencegripper/actions-public-scratch/actions/runs/12430924833/job/34707316191#step:5:51)
+ - write to $GITHUB_OUTPUT ❌ [Example](https://github.com/lawrencegripper/actions-public-scratch/actions/runs/12430924833/job/34707316191#step:6:41)
 
-## Environment Variables
+#### Why?
 
-The workflow uses several environment variables to define commands for checking permissions and writing to files:
+Writing to file added during build is fine as the user for `docker run` is the same. 
 
-- `USER_PERMISSIONS_OUTPUT_CMD`: Outputs user and group information and lists directory permissions.
-- `WRITE_PERMISSION_CHECK_CMD`: Checks write permissions for files added to the Docker image and files mounted from the host.
-- `OUTPUT_PERMISSION_CHECK_CMD`: Attempts to set output for the workflow stage.
+Writing to mounted file `/docker-build-args/file-mounted-from-host.txt: Permission denied` as the file is owned by `UID=1001` but docker container user is `UID=1000` 
 
-These commands are executed inside the Docker containers to verify the behavior of different user mappings and permissions.
+Writing to $GITHUB_OUTPUT fails for the same reason.
+
+### Job: `Build without mapping, run without user mapping, use sudo to write to GITHUB_OUTPUT`
+
+**Will pass?** ✅
+
+Can `docker run`:
+ - write to file placed in built image `/app/660-user-owned-copied-into-docker-image.txt` ✅
+ - write to file mounted from build folder `/docker-build-args/file-mounted-from-host.txt` ✅
+ - write to $GITHUB_OUTPUT ✅
+
+#### Why?
+
+The container has `sudo` installed. When using `docker run` we use `sudo` to make the user who runs 
+the command `root` `UID=0` giving it access to all files.
+
+### Job: `No user mapping, build and run as root user`
+
+**Will pass?** ✅
+
+Can `docker run`:
+ - write to file placed in built image `/app/660-user-owned-copied-into-docker-image.txt` ✅
+ - write to file mounted from build folder `/docker-build-args/file-mounted-from-host.txt` ✅
+ - write to $GITHUB_OUTPUT ✅
+
+#### Why?
+
+The user in the container is `root` `UID=0` this gives it write permissions over all files regardless of owning user.

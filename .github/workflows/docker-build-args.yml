@@ -178,8 +178,8 @@ jobs:
             test-docker-image-without-user-mapping \
             /bin/bash -c "${{ env.OUTPUT_PERMISSION_CHECK_CMD }}"
 
-  build-as-without-mapping-run-without-mapping:
-    name: Build as without mapping, run with without mapping
+  build-without-mapping-run-without-mapping:
+    name: Build without mapping, run with without mapping
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -218,7 +218,7 @@ jobs:
             test-docker-image-without-user-mapping \
             /bin/bash -c "${{ env.OUTPUT_PERMISSION_CHECK_CMD }}"
 
-  build-without-mapping-run-with-user-mapping-with-sudo:
+  build-without-mapping-run-without-user-mapping-with-sudo:
     name: Build without mapping, run without user mapping, use sudo to write to GITHUB_OUTPUT
     runs-on: ubuntu-latest
     steps:
@@ -247,7 +247,7 @@ jobs:
             -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
             -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
             test-docker-image-without-user-mapping \
-            /bin/bash -c "${{ env.WRITE_PERMISSION_CHECK_CMD }}"
+            sudo /bin/bash -c "${{ env.WRITE_PERMISSION_CHECK_CMD }}"
 
       - name: Run OUTPUT_PERMISSION_CHECK_CMD
         if: always()
@@ -256,7 +256,7 @@ jobs:
             -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
             -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
             test-docker-image-without-user-mapping \
-            /bin/bash -c "${{ env.OUTPUT_PERMISSION_CHECK_CMD }}"
+            sudo /bin/bash -c "${{ env.OUTPUT_PERMISSION_CHECK_CMD }}"
 
   no-user-mapping:
     name: No user mapping, build and run as root user
