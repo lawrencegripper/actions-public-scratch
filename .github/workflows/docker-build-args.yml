@@ -25,9 +25,13 @@ env:
     echo 'Running as group'
     id -g
     echo '!cat the file added to the docker image:'
-    cat /app/copied-into-docker-image.txt
+    cat /app/660-user-owned-660-user-owned-copied-into-docker-image.txt
+    echo '!can I write to this file added to docker image as current user?'
+    echo 'test' > /app/660-user-owned-660-user-owned-copied-into-docker-image.txt
     echo '!cat the file mounted into the docker image'
     cat /docker-build-args/file-mounted-from-host.txt
+    echo '!can I write to this file mounted into the docker image as current user?'
+    echo 'test' > /docker-build-args/file-mounted-from-host.txt
     echo '!Command dir permissions'
     ls -al /home/runner/work/_temp/_runner_file_commands/
     echo '!attempt to set output for stage'

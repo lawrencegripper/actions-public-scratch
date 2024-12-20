@@ -13,6 +13,6 @@ RUN groupadd -g $GROUPID examplegroupname
 RUN useradd -u $USERID -m -g examplegroupname exampleusername
 USER exampleusername
 
-COPY ./docker-build-args/copied-into-docker-image.txt .
+COPY --chmod=660 ./docker-build-args/660-user-owned-copied-into-docker-image.txt .
 
 CMD ["/bin/bash"]
