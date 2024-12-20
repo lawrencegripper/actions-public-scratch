@@ -15,6 +15,7 @@ on:
 
 env:
   USER_PERMISSIONS_OUTPUT_CMD: |
+    set -e
     echo '!App dir permissions'
     ls -al /app
     echo '!Mounted dir permissions'
@@ -27,6 +28,7 @@ env:
     echo '!Command dir permissions'
     ls -al /home/runner/work/_temp/_runner_file_commands/
   WRITE_PERMISSION_CHECK_CMD: |
+    set -e
     echo '!cat the file added to the docker image:'
     cat /app/660-user-owned-copied-into-docker-image.txt
     echo '!can I write to this file added to docker image as current user?'
@@ -36,6 +38,7 @@ env:
     echo '!can I write to this file mounted into the docker image as current user?'
     echo 'test' > /docker-build-args/file-mounted-from-host.txt
   OUTPUT_PERMISSION_CHECK_CMD: |
+    set -e
     echo '!attempt to set output for stage'
     echo 'key=value' > $GITHUB_OUTPUT
 
