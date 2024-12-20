@@ -1,0 +1,18 @@
+FROM debian
+
+ARG USERID=1000
+ARG GROUPID=1000
+
+RUN apt update && apt install -y sudo
+
+RUN mkdir /app
+RUN chown -R $USERID:$GROUPID /app
+WORKDIR /app
+
+RUN groupadd -g $GROUPID examplegroupname
+RUN useradd -u $USERID -m -g examplegroupname exampleusername
+USER exampleusername
+
+COPY ./docker-build-args/copied-into-docker-image.txt .
+
+CMD ["/bin/bash"]

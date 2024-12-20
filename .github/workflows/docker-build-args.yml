@@ -1,0 +1,162 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Docker Build User Mapping Example
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  DOCKER_RUN_COMMAND: |
+    echo '!App dir permissions'
+    ls -al /app
+    echo '!Mounted dir permissions'
+    ls -al /docker-build-args
+    echo 'Running as user'
+    whoami
+    id -u
+    echo 'Running as group'
+    id -g
+    echo '!cat the file added to the docker image:'
+    cat /app/copied-into-docker-image.txt
+    echo '!cat the file mounted into the docker image'
+    cat /docker-build-args/file-mounted-from-host.txt
+    echo '!Command dir permissions'
+    ls -al /home/runner/work/_temp/_runner_file_commands/
+    echo '!attempt to set output for stage'
+    echo 'key=value' > $GITHUB_OUTPUT
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build-with-user-mapping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build Docker image with user mapping
+        run: |
+          docker build \
+            --build-arg USERID=$(id -u) \
+            --build-arg GROUPID=$(id -g) \
+            -t test-docker-image \
+            -f ./docker-build-args/Dockerfile.with-user-mapping .
+
+      - name: Run Docker container with user mapping
+        run: |
+          docker run \
+            -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
+            -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
+            test-docker-image \
+            /bin/bash -c "${{ env.DOCKER_RUN_COMMAND }}"
+
+  build-with-user-mapping-run-with-user-mapping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg USERID=$(id -u) \
+            --build-arg GROUPID=$(id -g) \
+            -t test-docker-image \
+            -f ./docker-build-args/Dockerfile.with-user-mapping .
+
+      - name: Run DOCKER_RUN_COMMAND's
+        run: |
+          docker run \
+            --user "$(id -u):$(id -g)" \
+            -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
+            -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
+            test-docker-image \
+            /bin/bash -c "${{ env.DOCKER_RUN_COMMAND }}"
+
+  build-without-user-mapping-run-with-user-mapping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t test-docker-image-without-user-mapping \
+            -f ./docker-build-args/Dockerfile.without-user-mapping .
+
+      - name: Run DOCKER_RUN_COMMAND's
+        run: |
+          docker run \
+            --user $(id -u):$(id -g) \
+            -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
+            -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
+            test-docker-image-without-user-mapping \
+            /bin/bash -c "${{ env.DOCKER_RUN_COMMAND }}"
+  
+  build-as-1000-run-with-user-mapping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t test-docker-image-without-user-mapping \
+            -f ./docker-build-args/Dockerfile.with-user-mapping .
+
+      - name: Run Docker container
+        run: |
+          docker run \
+            -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
+            -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
+            test-docker-image-without-user-mapping \
+            /bin/bash -c "${{ env.DOCKER_RUN_COMMAND }}"
+
+  build-as-1000-run-with-user-mapping-with-sudo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t test-docker-image-without-user-mapping \
+            -f ./docker-build-args/Dockerfile.with-sudo .
+
+      - name: Output to GITHUB_OUTPUT with sudo
+        run: |
+          docker run \
+            -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
+            -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
+            test-docker-image-without-user-mapping \
+            /bin/bash -c "echo 'key=value' > sudo $GITHUB_OUTPUT"
+
+  no-user-mapping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build Docker image without user mapping
+        run: |
+          docker build \
+            -t test-docker-image-without-user-mapping \
+            -f ./docker-build-args/Dockerfile.without-user-mapping .
+
+      - name: Run DOCKER_RUN_COMMAND's
+        run: |
+          docker run \
+            -v ${{ github.workspace }}/docker-build-args:/docker-build-args \
+            -v $GITHUB_OUTPUT:$GITHUB_OUTPUT \
+            test-docker-image-without-user-mapping \
+            /bin/bash -c "${{ env.DOCKER_RUN_COMMAND }}"

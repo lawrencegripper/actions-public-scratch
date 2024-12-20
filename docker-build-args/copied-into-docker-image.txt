@@ -1,0 +1,1 @@
+hello from file copied into docker image
