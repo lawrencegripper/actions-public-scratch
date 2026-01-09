@@ -20,7 +20,7 @@ jobs:
 
       - uses: lawrencegripper/actions-term-on-fail@main
         with:
-          otp-secret: ${{ secrets.TERMINAL_OTP_SECRET }}
+          otp-secret: ${{ secrets.OTP_SECRET }}
           timeout: '30'  # Optional: minutes to wait (default: 30)
 
       - run: exit 1
