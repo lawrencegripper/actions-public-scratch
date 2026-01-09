@@ -1,0 +1,26 @@
+name: Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-action-on-failure:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: lawrencegripper/actions-term-on-fail@main
+        with:
+          otp-secret: ${{ secrets.TERMINAL_OTP_SECRET }}
+          timeout: '30'  # Optional: minutes to wait (default: 30)
+
+      - run: exit 1
